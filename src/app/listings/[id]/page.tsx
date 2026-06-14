@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import Image from 'next/image'
+import { MakeOfferForm } from '@/components/MakeOfferForm'
 
 export const dynamic = 'force-dynamic'
 
@@ -52,6 +53,17 @@ export default async function ListingDetailPage({ params }: Props) {
 
   const { data: { user } } = await supabase.auth.getUser()
   const isOwner = user?.id === listing.user_id
+
+  // Check if the current user already has an offer on this listing
+  const existingOffer = (user && !isOwner)
+    ? (await supabase
+        .from('offers')
+        .select('id, status')
+        .eq('listing_id', id)
+        .eq('from_user_id', user.id)
+        .maybeSingle()
+      ).data
+    : null
 
   const profile = listing.profiles as { username: string; region: string; trade_count: number; vouch_count: number } | null
   const category = listing.categories as { name: string } | null
@@ -138,15 +150,12 @@ export default async function ListingDetailPage({ params }: Props) {
 
       {/* CTA */}
       {!isOwner && listing.status === 'active' && (
-        <div className="card bg-stone-900 border-stone-800">
-          <p className="text-white font-semibold">Want to trade for this?</p>
-          <p className="text-stone-400 text-sm mt-1 mb-4">
-            Offers and messaging are coming soon. For now, the platform is in early access.
-          </p>
-          <button disabled className="btn-primary w-full opacity-50 cursor-not-allowed">
-            Make an Offer — coming soon
-          </button>
-        </div>
+        <MakeOfferForm
+          listingId={listing.id}
+          listingTitle={listing.title}
+          isLoggedIn={!!user}
+          existingOffer={existingOffer}
+        />
       )}
 
       {isOwner && (
