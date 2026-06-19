@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 
@@ -57,7 +56,6 @@ interface Props {
 }
 
 export function EditListingForm({ userId, listing }: Props) {
-  const router = useRouter()
   const supabase = createClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -181,8 +179,7 @@ export function EditListingForm({ userId, listing }: Props) {
 
       if (updateError) throw new Error(updateError.message)
 
-      router.push(`/listings/${listing.id}`)
-      router.refresh()
+      window.location.href = `/listings/${listing.id}`
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong.')
       setSaving(false)
@@ -205,8 +202,7 @@ export function EditListingForm({ userId, listing }: Props) {
       const { error } = await supabase.from('listings').delete().eq('id', listing.id)
       if (error) throw new Error(error.message)
 
-      router.push('/profile')
-      router.refresh()
+      window.location.href = '/profile'
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Delete failed.')
       setDeleting(false)
