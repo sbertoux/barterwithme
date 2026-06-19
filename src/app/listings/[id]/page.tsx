@@ -4,13 +4,15 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import Image from 'next/image'
 import { MakeOfferForm } from '@/components/MakeOfferForm'
+import { ReportListingButton } from '@/components/ReportListingButton'
 
 export const dynamic = 'force-dynamic'
 
 const LISTING_TYPE_LABELS: Record<string, string> = {
   item: 'One-time item',
-  service: 'Service',
-  recurring: 'Recurring goods',
+  service_onetime: 'One-time service',
+  service_recurring: 'Ongoing service',
+  recurring_goods: 'Recurring goods',
 }
 
 const CATEGORY_ICONS: Record<number, string> = {
@@ -138,7 +140,9 @@ export default async function ListingDetailPage({ params }: Props) {
         <div className="card mb-4 flex items-center justify-between">
           <div>
             <p className="text-xs text-stone-400 mb-0.5">Listed by</p>
-            <p className="font-semibold text-stone-800">@{profile.username}</p>
+            <Link href={`/users/${profile.username}`} className="font-semibold text-stone-800 hover:text-brand-600 hover:underline">
+              @{profile.username}
+            </Link>
             <p className="text-xs text-stone-500 mt-0.5">{profile.region}</p>
           </div>
           <div className="text-right text-xs text-stone-400 space-y-0.5">
@@ -150,12 +154,15 @@ export default async function ListingDetailPage({ params }: Props) {
 
       {/* CTA */}
       {!isOwner && listing.status === 'active' && (
-        <MakeOfferForm
-          listingId={listing.id}
-          listingTitle={listing.title}
-          isLoggedIn={!!user}
-          existingOffer={existingOffer}
-        />
+        <>
+          <MakeOfferForm
+            listingId={listing.id}
+            listingTitle={listing.title}
+            isLoggedIn={!!user}
+            existingOffer={existingOffer}
+          />
+          {user && <ReportListingButton listingId={listing.id} />}
+        </>
       )}
 
       {isOwner && (
@@ -165,7 +172,7 @@ export default async function ListingDetailPage({ params }: Props) {
             <Link href={`/listings/${listing.id}/edit`} className="btn-secondary text-sm">
               Edit listing
             </Link>
-            {listing.status === 'active' && listing.listing_type === 'item' && (
+            {listing.status === 'active' && ['item', 'service_onetime'].includes(listing.listing_type) && (
               <MarkTradedButton listingId={listing.id} />
             )}
           </div>

@@ -4,14 +4,38 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { zipToRegion, isValidUSZip } from '@/lib/region'
 
-type Step = 'details' | 'verify-email'
+type Step = 'welcome' | 'details' | 'verify-email'
+
+const RULES = [
+  {
+    icon: '📋',
+    title: 'You need an active listing to participate',
+    body: 'Everyone here has something to offer. Before making offers on others\' listings, you\'ll create your own first.',
+  },
+  {
+    icon: '📍',
+    title: 'Your location is kept general',
+    body: 'Your zip code is converted to a region (e.g. "Florida") and your zip is never stored or shown to anyone.',
+  },
+  {
+    icon: '💬',
+    title: 'All communication stays in-app',
+    body: 'Don\'t share personal contact info until you\'re ready. Use the in-app thread to get comfortable first.',
+  },
+  {
+    icon: '🤝',
+    title: 'Community-owned and open source',
+    body: 'No ads, no data sales. The code is public. If the platform ever shuts down, anyone can run their own instance.',
+  },
+]
 
 export function SignupForm() {
   const supabase = createClient()
-  const [step, setStep] = useState<Step>('details')
+  const [step, setStep] = useState<Step>('welcome')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [submittedEmail, setSubmittedEmail] = useState('')
+  const [termsAccepted, setTermsAccepted] = useState(false)
 
   const [form, setForm] = useState({
     email: '',
@@ -32,6 +56,10 @@ export function SignupForm() {
     e.preventDefault()
     setError('')
 
+    if (!termsAccepted) {
+      setError('Please accept the Terms of Service to continue.')
+      return
+    }
     if (!isValidUSZip(form.zip)) {
       setError('Please enter a valid US zip code.')
       return
@@ -48,6 +76,7 @@ export function SignupForm() {
         data: {
           username: form.username,
           region,
+          terms_accepted_at: new Date().toISOString(),
         },
       },
     })
@@ -73,7 +102,7 @@ export function SignupForm() {
           Click it to verify your account and finish setting up your profile.
         </p>
         <p className="text-xs text-stone-400">
-          Didn't get it? Check your spam folder or{' '}
+          Didn&apos;t get it? Check your spam folder or{' '}
           <button
             onClick={() => setStep('details')}
             className="underline hover:text-stone-600"
@@ -82,6 +111,44 @@ export function SignupForm() {
           </button>
           .
         </p>
+      </div>
+    )
+  }
+
+  if (step === 'welcome') {
+    return (
+      <div className="card space-y-6">
+        <div>
+          <h2 className="text-lg font-bold text-stone-900">Before you join — here&apos;s how this works</h2>
+          <p className="mt-1 text-sm text-stone-500">BarterWithMe has a few simple rules that keep the community healthy.</p>
+        </div>
+
+        <ul className="space-y-4">
+          {RULES.map((rule) => (
+            <li key={rule.title} className="flex gap-3">
+              <span className="mt-0.5 shrink-0 text-xl">{rule.icon}</span>
+              <div>
+                <p className="text-sm font-semibold text-stone-800">{rule.title}</p>
+                <p className="mt-0.5 text-xs text-stone-500 leading-relaxed">{rule.body}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        <div className="rounded-xl bg-stone-50 border border-stone-200 px-4 py-3 text-xs text-stone-500">
+          Read our{' '}
+          <a href="/community-guidelines" className="underline" target="_blank">Community Guidelines</a>,{' '}
+          <a href="/safety" className="underline" target="_blank">Safety tips</a>, and{' '}
+          <a href="/terms" className="underline" target="_blank">Terms of Service</a>{' '}
+          before joining.
+        </div>
+
+        <button
+          onClick={() => setStep('details')}
+          className="btn-primary w-full"
+        >
+          Got it — let&apos;s join →
+        </button>
       </div>
     )
   }
@@ -146,7 +213,7 @@ export function SignupForm() {
           {...field('zip')}
         />
         <p className="mt-1 text-xs text-stone-400">
-          Converted to a general region (e.g. "Florida") — your zip is never stored or shown.
+          Converted to a general region (e.g. &ldquo;Florida&rdquo;) — your zip is never stored or shown.
         </p>
         {form.zip && isValidUSZip(form.zip) && (
           <p className="mt-1 text-xs font-medium text-brand-600">
@@ -155,16 +222,31 @@ export function SignupForm() {
         )}
       </div>
 
-      <div className="rounded-xl bg-stone-50 border border-stone-200 px-4 py-3 text-xs text-stone-500">
-        By joining you agree to our{' '}
-        <a href="/terms" className="underline">Terms of Service</a> and{' '}
-        <a href="/community-guidelines" className="underline">Community Guidelines</a>.
-        No financial information ever required.
-      </div>
+      <label className="flex items-start gap-3 cursor-pointer">
+        <input
+          type="checkbox"
+          className="mt-0.5 h-4 w-4 shrink-0 rounded border-stone-300 text-brand-600 focus:ring-brand-500"
+          checked={termsAccepted}
+          onChange={(e) => { setTermsAccepted(e.target.checked); setError('') }}
+          required
+        />
+        <span className="text-xs text-stone-500 leading-relaxed">
+          I have read and agree to the{' '}
+          <a href="/terms" className="underline" target="_blank">Terms of Service</a> and{' '}
+          <a href="/community-guidelines" className="underline" target="_blank">Community Guidelines</a>.
+          No financial information is ever required.
+        </span>
+      </label>
 
       <button type="submit" disabled={loading} className="btn-primary w-full">
         {loading ? 'Creating account…' : 'Create account →'}
       </button>
+
+      <p className="text-center text-xs text-stone-400">
+        <button type="button" onClick={() => setStep('welcome')} className="underline hover:text-stone-600">
+          ← Back to overview
+        </button>
+      </p>
     </form>
   )
 }

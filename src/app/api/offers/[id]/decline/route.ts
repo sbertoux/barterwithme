@@ -12,14 +12,14 @@ export async function POST(
 
   const { data: offer } = await supabase
     .from('offers')
-    .select('id, status, listings(user_id)')
+    .select('id, status, listing_id')
     .eq('id', id)
     .single()
 
   if (!offer) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  const listing = offer.listings as unknown as { user_id: string }
-  if (listing.user_id !== user.id) {
+  const { data: listerId } = await supabase.rpc('get_listing_owner', { lid: offer.listing_id })
+  if (listerId !== user.id) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
   if (!['pending', 'countered'].includes(offer.status)) {

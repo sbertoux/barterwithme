@@ -10,12 +10,11 @@ export async function POST(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { storyText } = await request.json()
-  if (!storyText?.trim()) return NextResponse.json({ error: 'Story text required' }, { status: 400 })
+  const { noteText } = await request.json()
 
   const { data: trade } = await supabase
     .from('trades')
-    .select('id, completed_at, listing_id, listings(user_id, region), offers(from_user_id)')
+    .select('id, completed_at, listing_id, offers(from_user_id, offer_description)')
     .eq('id', id)
     .single()
 
@@ -23,20 +22,30 @@ export async function POST(
     return NextResponse.json({ error: 'Trade not completed' }, { status: 400 })
   }
 
-  const listing = trade.listings as unknown as { user_id: string; region: string }
-  const offer = trade.offers as unknown as { from_user_id: string }
+  const [{ data: listerId }, { data: listingData }] = await Promise.all([
+    supabase.rpc('get_listing_owner', { lid: trade.listing_id }),
+    supabase.from('listings').select('title, region').eq('id', trade.listing_id).maybeSingle(),
+  ])
 
-  if (user.id !== listing.user_id && user.id !== offer.from_user_id) {
+  const offer = trade.offers as unknown as { from_user_id: string; offer_description: string }
+
+  if (user.id !== listerId && user.id !== offer.from_user_id) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
+
+  const tradeSummary = listingData?.title
+    ? `${offer.offer_description} for "${listingData.title}"`
+    : offer.offer_description
 
   const { data: story, error } = await supabase
     .from('trade_stories')
     .insert({
       trade_id: id,
-      story_text: storyText.trim(),
-      region: listing.region,
+      trade_summary: tradeSummary,
+      story_text: noteText?.trim() || null,
+      region: listingData?.region ?? '',
       is_public: true,
+      user_id: user.id,
     })
     .select('id')
     .single()

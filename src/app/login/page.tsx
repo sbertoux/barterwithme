@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import { Suspense } from 'react'
 import { LoginForm } from './LoginForm'
 
 export const dynamic = 'force-dynamic'
@@ -10,7 +11,9 @@ export default function LoginPage() {
       <div className="mb-8 text-center">
         <h1 className="text-2xl font-bold text-stone-900">Welcome back</h1>
       </div>
-      <LoginForm />
+      <Suspense fallback={<div className="card animate-pulse h-48" />}>
+        <LoginForm />
+      </Suspense>
       <p className="mt-6 text-center text-sm text-stone-500">
         No account yet?{' '}
         <a href="/signup" className="font-medium text-brand-600 hover:underline">

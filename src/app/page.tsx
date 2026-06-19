@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ActivityAlert } from '@/components/ActivityAlert'
 
 const CATEGORIES = [
   { name: 'Food & Garden', icon: '🌱', href: '/browse?category=food-garden' },
@@ -15,6 +16,7 @@ const CATEGORIES = [
 export default function HomePage() {
   return (
     <div className="mx-auto max-w-4xl px-4 pb-24 sm:pb-8">
+      <ActivityAlert />
       {/* Hero */}
       <section className="py-12 text-center sm:py-16">
         <h1 className="text-4xl font-bold text-stone-900 sm:text-5xl">

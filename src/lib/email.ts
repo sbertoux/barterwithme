@@ -52,3 +52,24 @@ export function notifyNewMessage(
      <p><a href="${BASE}/offers/${offerId}">Reply →</a></p>`
   )
 }
+
+export function notifyTradeConfirmed(
+  toEmail: string,
+  { fromUsername, offerId, isComplete }: { fromUsername: string; offerId: string; isComplete: boolean }
+) {
+  if (isComplete) {
+    return send(
+      toEmail,
+      'Your trade is complete! 🎉',
+      `<p>Both parties confirmed — your trade is officially complete!</p>
+       <p><a href="${BASE}/offers/${offerId}">View trade →</a></p>`
+    )
+  }
+  return send(
+    toEmail,
+    `@${fromUsername} confirmed their side of the trade`,
+    `<p><strong>@${fromUsername}</strong> confirmed their side of the trade.</p>
+     <p>Once you confirm too, the trade will be officially complete.</p>
+     <p><a href="${BASE}/offers/${offerId}">Confirm your side →</a></p>`
+  )
+}

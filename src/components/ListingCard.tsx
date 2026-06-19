@@ -2,11 +2,15 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
 
-const TYPE_CONFIG = {
-  item:      { label: 'Item',      classes: 'bg-stone-100 text-stone-600' },
-  service:   { label: 'Service',   classes: 'bg-sky-50 text-sky-700' },
-  recurring: { label: 'Recurring', classes: 'bg-green-50 text-green-700' },
-} as const
+const TYPE_CONFIG: Record<string, { label: string; classes: string }> = {
+  item:               { label: 'Item',             classes: 'bg-stone-100 text-stone-600' },
+  service_onetime:    { label: 'One-time service',  classes: 'bg-sky-50 text-sky-700' },
+  service_recurring:  { label: 'Ongoing service',   classes: 'bg-indigo-50 text-indigo-700' },
+  recurring_goods:    { label: 'Recurring goods',   classes: 'bg-green-50 text-green-700' },
+  // legacy values (pre-migration-007)
+  service:            { label: 'Service',           classes: 'bg-sky-50 text-sky-700' },
+  recurring:          { label: 'Recurring',         classes: 'bg-green-50 text-green-700' },
+}
 
 const CATEGORY_ICONS: Record<string, string> = {
   'food-garden': '🌱',
@@ -24,7 +28,7 @@ interface Props {
   id: string
   title: string
   description: string
-  listingType: 'item' | 'service' | 'recurring'
+  listingType: string
   category: { name: string; slug: string } | null
   photos: string[]
   openTo: string | null

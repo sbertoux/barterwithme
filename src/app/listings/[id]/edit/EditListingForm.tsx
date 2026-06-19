@@ -5,11 +5,24 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 
-const LISTING_TYPES = [
-  { value: 'item',      label: 'Item',           icon: '📦', description: 'One-time trade. Mark as traded when done.' },
-  { value: 'service',   label: 'Service',         icon: '🔨', description: 'Ongoing or repeatable. Stays active until you remove it.' },
-  { value: 'recurring', label: 'Recurring Goods', icon: '🔄', description: 'Available regularly — produce, eggs, honey, etc.' },
-] as const
+type ListingTypeValue = 'item' | 'service_onetime' | 'service_recurring' | 'recurring_goods'
+type TopCard = 'item' | 'service' | 'recurring_goods'
+
+const TOP_CARDS: { value: TopCard; label: string; icon: string; description: string }[] = [
+  { value: 'item',            label: 'Item',           icon: '📦', description: 'One-time trade. Mark as traded when done.' },
+  { value: 'service',         label: 'Service',        icon: '🔨', description: 'A skill or labour — one-time or ongoing.' },
+  { value: 'recurring_goods', label: 'Recurring Goods',icon: '🔄', description: 'Available regularly — produce, eggs, honey, etc.' },
+]
+
+const SERVICE_KINDS: { value: ListingTypeValue; label: string; description: string }[] = [
+  { value: 'service_onetime',   label: 'One-time',          description: 'A single job or session. Hides from Browse once accepted.' },
+  { value: 'service_recurring', label: 'Ongoing / recurring', description: 'Repeatable. Stays active through multiple accepted offers.' },
+]
+
+function toTopCard(t: ListingTypeValue): TopCard {
+  if (t === 'service_onetime' || t === 'service_recurring') return 'service'
+  return t
+}
 
 const CATEGORIES = [
   { id: 1, name: 'Food & Garden',          icon: '🌱' },
@@ -30,7 +43,7 @@ interface ListingData {
   id: string
   title: string
   description: string
-  listing_type: 'item' | 'service' | 'recurring'
+  listing_type: ListingTypeValue
   category_id: number
   open_to: string
   photos: string[]
@@ -49,7 +62,8 @@ export function EditListingForm({ userId, listing }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Field state — seeded from existing listing
-  const [listingType, setListingType] = useState<'item' | 'service' | 'recurring'>(listing.listing_type)
+  const [topCard, setTopCard] = useState<TopCard>(toTopCard(listing.listing_type))
+  const [listingType, setListingType] = useState<ListingTypeValue>(listing.listing_type)
   const [categoryId, setCategoryId] = useState<number>(listing.category_id)
   const [title, setTitle] = useState(listing.title)
   const [description, setDescription] = useState(listing.description)
@@ -215,24 +229,55 @@ export function EditListingForm({ userId, listing }: Props) {
         <fieldset>
           <legend className="label mb-3 text-base">What are you listing?</legend>
           <div className="grid gap-3 sm:grid-cols-3">
-            {LISTING_TYPES.map((type) => (
+            {TOP_CARDS.map((card) => (
               <button
-                key={type.value}
+                key={card.value}
                 type="button"
-                onClick={() => setListingType(type.value)}
+                onClick={() => {
+                  setTopCard(card.value)
+                  if (card.value === 'item') setListingType('item')
+                  else if (card.value === 'recurring_goods') setListingType('recurring_goods')
+                  // service: keep existing or reset until sub-question answered
+                  else if (topCard !== 'service') setListingType('service_onetime')
+                }}
                 className={cn(
                   'flex flex-col items-start rounded-xl border p-4 text-left transition-all',
-                  listingType === type.value
+                  topCard === card.value
                     ? 'border-brand-400 bg-brand-50 ring-2 ring-brand-400/30'
                     : 'border-stone-200 bg-white hover:border-stone-300'
                 )}
               >
-                <span className="mb-2 text-2xl">{type.icon}</span>
-                <span className="text-sm font-semibold text-stone-800">{type.label}</span>
-                <span className="mt-0.5 text-xs text-stone-500">{type.description}</span>
+                <span className="mb-2 text-2xl">{card.icon}</span>
+                <span className="text-sm font-semibold text-stone-800">{card.label}</span>
+                <span className="mt-0.5 text-xs text-stone-500">{card.description}</span>
               </button>
             ))}
           </div>
+
+          {/* Service sub-question */}
+          {topCard === 'service' && (
+            <div className="mt-3 rounded-xl border border-brand-100 bg-brand-50 p-4">
+              <p className="text-sm font-medium text-stone-700 mb-3">Is this a one-time service or ongoing/recurring?</p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {SERVICE_KINDS.map((kind) => (
+                  <button
+                    key={kind.value}
+                    type="button"
+                    onClick={() => setListingType(kind.value)}
+                    className={cn(
+                      'flex flex-col items-start rounded-lg border p-3 text-left transition-all',
+                      listingType === kind.value
+                        ? 'border-brand-400 bg-white ring-2 ring-brand-400/30'
+                        : 'border-brand-200 bg-white hover:border-brand-300'
+                    )}
+                  >
+                    <span className="text-sm font-semibold text-stone-800">{kind.label}</span>
+                    <span className="text-xs text-stone-500 mt-0.5">{kind.description}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </fieldset>
 
         {/* Category */}

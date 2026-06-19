@@ -13,7 +13,7 @@ export default async function StoriesPage() {
 
   const { data: stories } = await supabase
     .from('trade_stories')
-    .select('id, story_text, region, created_at')
+    .select('id, trade_summary, story_text, region, created_at')
     .eq('is_public', true)
     .order('created_at', { ascending: false })
     .limit(50)
@@ -41,17 +41,25 @@ export default async function StoriesPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {stories.map((story) => (
-            <div key={story.id} className="card flex items-start gap-4">
-              <span className="mt-0.5 shrink-0 text-2xl">🤝</span>
-              <div>
-                <p className="font-medium text-stone-800 leading-snug">{story.story_text}</p>
-                <p className="mt-1 text-xs text-stone-400">
-                  {story.region} · {new Date(story.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                </p>
+          {stories.map((story) => {
+            // Backwards-compat: old stories stored everything in story_text
+            const summary = story.trade_summary ?? story.story_text
+            const note = story.trade_summary ? story.story_text : null
+            return (
+              <div key={story.id} className="card flex items-start gap-4">
+                <span className="mt-0.5 shrink-0 text-2xl">🤝</span>
+                <div>
+                  <p className="font-semibold text-stone-800 leading-snug">{summary}</p>
+                  {note && (
+                    <p className="mt-1 text-sm text-stone-600 leading-relaxed">&ldquo;{note}&rdquo;</p>
+                  )}
+                  <p className="mt-1.5 text-xs text-stone-400">
+                    {story.region} · {new Date(story.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 

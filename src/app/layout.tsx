@@ -24,11 +24,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen flex flex-col">
         <Nav />
         <main className="flex-1">{children}</main>
-        <footer className="border-t border-stone-200 py-6 text-center text-xs text-stone-400">
-          <p>
-            BarterWithMe is community-owned and open source.{' '}
-            <a href="/why" className="underline hover:text-stone-600">Why this exists →</a>
-          </p>
+        <footer className="border-t border-stone-200 py-8 text-center text-xs text-stone-400">
+          <p className="mb-2 font-medium text-stone-500">BarterWithMe</p>
+          <nav className="flex flex-wrap justify-center gap-x-5 gap-y-1.5 mb-3">
+            <a href="/why" className="hover:text-stone-600 hover:underline">Why this exists</a>
+            <a href="/safety" className="hover:text-stone-600 hover:underline">Safety tips</a>
+            <a href="/community-guidelines" className="hover:text-stone-600 hover:underline">Guidelines</a>
+            <a href="/terms" className="hover:text-stone-600 hover:underline">Terms of Service</a>
+            <a href="/donate" className="hover:text-stone-600 hover:underline">Support the project</a>
+          </nav>
+          <p>Community-owned · Open source · No ads · No data sales</p>
         </footer>
       </body>
     </html>

@@ -33,12 +33,14 @@ const CATEGORY_NAMES: Record<string, string> = {
 }
 
 interface PageProps {
-  searchParams: Promise<{ q?: string; category?: string; region?: string }>
+  searchParams: Promise<{ q?: string; category?: string; region?: string; show_mine?: string }>
 }
 
 export default async function BrowsePage({ searchParams }: PageProps) {
-  const { q, category, region } = await searchParams
+  const { q, category, region, show_mine } = await searchParams
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const showMine = show_mine === '1'
 
   // Listings query — build up filters
   let query = supabase
@@ -49,6 +51,7 @@ export default async function BrowsePage({ searchParams }: PageProps) {
       profiles ( username )
     `)
     .eq('status', 'active')
+    .eq('is_paused', false)
     .order('created_at', { ascending: false })
     .limit(60)
 
@@ -68,13 +71,19 @@ export default async function BrowsePage({ searchParams }: PageProps) {
     query = query.eq('region', region)
   }
 
+  // Exclude the logged-in user's own listings unless they opted in
+  if (user && !showMine) {
+    query = query.neq('user_id', user.id)
+  }
+
   // Run listings + distinct regions in parallel
   const [{ data: listings }, { data: regionRows }] = await Promise.all([
     query,
     supabase
       .from('listings')
       .select('region')
-      .eq('status', 'active'),
+      .eq('status', 'active')
+      .eq('is_paused', false),
   ])
 
   const distinctRegions = [
@@ -102,13 +111,23 @@ export default async function BrowsePage({ searchParams }: PageProps) {
       </Suspense>
 
       {/* Result count */}
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between gap-3">
         <p className="text-sm text-stone-400">{resultLabel}</p>
-        {(q || category || region) && (
-          <a href="/browse" className="text-xs text-stone-400 underline hover:text-stone-600">
-            Clear filters
-          </a>
-        )}
+        <div className="flex shrink-0 items-center gap-3">
+          {user && (
+            <a
+              href={buildToggleUrl({ q, category, region, showMine })}
+              className="text-xs text-stone-400 hover:text-stone-600 hover:underline"
+            >
+              {showMine ? 'Hide my listings' : 'Show mine too'}
+            </a>
+          )}
+          {(q || category || region) && (
+            <a href="/browse" className="text-xs text-stone-400 underline hover:text-stone-600">
+              Clear filters
+            </a>
+          )}
+        </div>
       </div>
 
       {/* Grid */}
@@ -120,7 +139,7 @@ export default async function BrowsePage({ searchParams }: PageProps) {
               id={listing.id}
               title={listing.title}
               description={listing.description}
-              listingType={listing.listing_type as 'item' | 'service' | 'recurring'}
+              listingType={listing.listing_type}
               category={listing.categories as unknown as { name: string; slug: string } | null}
               photos={(listing.photos as string[]) ?? []}
               openTo={listing.open_to}
@@ -136,6 +155,18 @@ export default async function BrowsePage({ searchParams }: PageProps) {
       )}
     </div>
   )
+}
+
+function buildToggleUrl({
+  q, category, region, showMine,
+}: { q?: string; category?: string; region?: string; showMine: boolean }) {
+  const p = new URLSearchParams()
+  if (q) p.set('q', q)
+  if (category) p.set('category', category)
+  if (region) p.set('region', region)
+  if (!showMine) p.set('show_mine', '1')   // toggling ON
+  const qs = p.toString()
+  return qs ? `/browse?${qs}` : '/browse'
 }
 
 function EmptyState({ hasFilters }: { hasFilters: boolean }) {

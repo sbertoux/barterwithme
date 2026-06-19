@@ -15,14 +15,18 @@ export async function POST(request: Request) {
 
   const { data: offer } = await supabase
     .from('offers')
-    .select('id, from_user_id, status, listing_id, listings(user_id, title)')
+    .select('id, from_user_id, status, listing_id')
     .eq('id', offerId)
     .single()
 
   if (!offer) return NextResponse.json({ error: 'Offer not found' }, { status: 404 })
 
-  const listing = offer.listings as unknown as { user_id: string; title: string }
-  const isLister = user.id === listing.user_id
+  const [{ data: listerId }, { data: listingData }] = await Promise.all([
+    supabase.rpc('get_listing_owner', { lid: offer.listing_id }),
+    supabase.from('listings').select('title').eq('id', offer.listing_id).single(),
+  ])
+
+  const isLister = user.id === listerId
   const isTrader = user.id === offer.from_user_id
 
   if (!isLister && !isTrader) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
@@ -30,7 +34,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'This offer is closed' }, { status: 400 })
   }
 
-  const toUserId = isLister ? offer.from_user_id : listing.user_id
+  const toUserId = isLister ? offer.from_user_id : listerId
 
   // Lister messaging on a pending offer moves it to 'countered'
   if (isLister && offer.status === 'pending') {
@@ -58,7 +62,7 @@ export async function POST(request: Request) {
     notifyNewMessage(toAuth.user.email, {
       fromUsername: fromProfile.username,
       offerId,
-      listingTitle: listing.title,
+      listingTitle: listingData?.title ?? '',
     })
   }
 

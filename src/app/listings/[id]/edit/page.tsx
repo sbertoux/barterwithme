@@ -51,7 +51,7 @@ export default async function EditListingPage({ params }: Props) {
           id: listing.id,
           title: listing.title,
           description: listing.description,
-          listing_type: listing.listing_type as 'item' | 'service' | 'recurring',
+          listing_type: listing.listing_type as 'item' | 'service_onetime' | 'service_recurring' | 'recurring_goods',
           category_id: listing.category_id,
           open_to: listing.open_to ?? '',
           photos: (listing.photos as string[]) ?? [],

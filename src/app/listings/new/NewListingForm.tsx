@@ -5,26 +5,19 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 
-const LISTING_TYPES = [
-  {
-    value: 'item',
-    label: 'Item',
-    icon: '📦',
-    description: 'One-time trade. Mark as traded when done.',
-  },
-  {
-    value: 'service',
-    label: 'Service',
-    icon: '🔨',
-    description: 'Ongoing or repeatable. Stays active until you remove it.',
-  },
-  {
-    value: 'recurring',
-    label: 'Recurring Goods',
-    icon: '🔄',
-    description: 'Available regularly — produce, eggs, honey, etc.',
-  },
-] as const
+type ListingTypeValue = 'item' | 'service_onetime' | 'service_recurring' | 'recurring_goods'
+type TopCard = 'item' | 'service' | 'recurring_goods'
+
+const TOP_CARDS: { value: TopCard; label: string; icon: string; description: string }[] = [
+  { value: 'item',           label: 'Item',           icon: '📦', description: 'One-time trade. Mark as traded when done.' },
+  { value: 'service',        label: 'Service',        icon: '🔨', description: 'A skill or labour — one-time or ongoing.' },
+  { value: 'recurring_goods',label: 'Recurring Goods',icon: '🔄', description: 'Available regularly — produce, eggs, honey, etc.' },
+]
+
+const SERVICE_KINDS: { value: ListingTypeValue; label: string; description: string }[] = [
+  { value: 'service_onetime',   label: 'One-time',          description: 'A single job or session. Hides from Browse once accepted.' },
+  { value: 'service_recurring', label: 'Ongoing / recurring', description: 'Repeatable. Stays active through multiple accepted offers.' },
+]
 
 const CATEGORIES = [
   { id: 1, name: 'Food & Garden', icon: '🌱' },
@@ -51,7 +44,8 @@ export function NewListingForm({ userId, region }: Props) {
   const supabase = createClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [listingType, setListingType] = useState<'item' | 'service' | 'recurring' | ''>('')
+  const [topCard, setTopCard] = useState<TopCard | ''>('')
+  const [listingType, setListingType] = useState<ListingTypeValue | ''>('')
   const [categoryId, setCategoryId] = useState<number | null>(null)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -107,7 +101,7 @@ export function NewListingForm({ userId, region }: Props) {
     e.preventDefault()
     setError('')
 
-    if (!listingType) { setError('Choose a listing type.'); return }
+    if (!listingType) { setError(topCard === 'service' ? 'Choose one-time or ongoing service.' : 'Choose a listing type.'); return }
     if (!categoryId) { setError('Choose a category.'); return }
     if (!title.trim()) { setError('Add a title.'); return }
     if (!description.trim()) { setError('Add a description.'); return }
@@ -168,24 +162,57 @@ export function NewListingForm({ userId, region }: Props) {
       <fieldset>
         <legend className="label text-base mb-3">What are you listing?</legend>
         <div className="grid gap-3 sm:grid-cols-3">
-          {LISTING_TYPES.map((type) => (
-            <button
-              key={type.value}
-              type="button"
-              onClick={() => setListingType(type.value)}
-              className={cn(
-                'flex flex-col items-start rounded-xl border p-4 text-left transition-all',
-                listingType === type.value
-                  ? 'border-brand-400 bg-brand-50 ring-2 ring-brand-400/30'
-                  : 'border-stone-200 bg-white hover:border-stone-300'
-              )}
-            >
-              <span className="text-2xl mb-2">{type.icon}</span>
-              <span className="font-semibold text-stone-800 text-sm">{type.label}</span>
-              <span className="text-xs text-stone-500 mt-0.5">{type.description}</span>
-            </button>
-          ))}
+          {TOP_CARDS.map((card) => {
+            const isActive = topCard === card.value
+            return (
+              <button
+                key={card.value}
+                type="button"
+                onClick={() => {
+                  setTopCard(card.value)
+                  if (card.value === 'item') setListingType('item')
+                  else if (card.value === 'recurring_goods') setListingType('recurring_goods')
+                  else setListingType('')
+                }}
+                className={cn(
+                  'flex flex-col items-start rounded-xl border p-4 text-left transition-all',
+                  isActive
+                    ? 'border-brand-400 bg-brand-50 ring-2 ring-brand-400/30'
+                    : 'border-stone-200 bg-white hover:border-stone-300'
+                )}
+              >
+                <span className="text-2xl mb-2">{card.icon}</span>
+                <span className="font-semibold text-stone-800 text-sm">{card.label}</span>
+                <span className="text-xs text-stone-500 mt-0.5">{card.description}</span>
+              </button>
+            )
+          })}
         </div>
+
+        {/* Service sub-question */}
+        {topCard === 'service' && (
+          <div className="mt-3 rounded-xl border border-brand-100 bg-brand-50 p-4">
+            <p className="text-sm font-medium text-stone-700 mb-3">Is this a one-time service or ongoing/recurring?</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {SERVICE_KINDS.map((kind) => (
+                <button
+                  key={kind.value}
+                  type="button"
+                  onClick={() => setListingType(kind.value)}
+                  className={cn(
+                    'flex flex-col items-start rounded-lg border p-3 text-left transition-all',
+                    listingType === kind.value
+                      ? 'border-brand-400 bg-white ring-2 ring-brand-400/30'
+                      : 'border-brand-200 bg-white hover:border-brand-300'
+                  )}
+                >
+                  <span className="text-sm font-semibold text-stone-800">{kind.label}</span>
+                  <span className="text-xs text-stone-500 mt-0.5">{kind.description}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </fieldset>
 
       {/* Category */}
