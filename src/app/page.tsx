@@ -1,5 +1,22 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ActivityAlert } from '@/components/ActivityAlert'
+
+export const metadata: Metadata = {
+  title: 'BarterWithMe — Trade what you have. Get what you need.',
+  description: 'A privacy-first, community-owned barter platform. Trade goods and services directly with people in your community. No money, no middlemen, no surveillance.',
+  openGraph: {
+    title: 'BarterWithMe — Trade what you have. Get what you need.',
+    description: 'A privacy-first, community-owned barter platform. Trade goods and services directly with people in your community. No money, no middlemen, no surveillance.',
+    url: 'https://barterwithme.org',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'BarterWithMe — Trade what you have. Get what you need.',
+    description: 'A privacy-first, community-owned barter platform. Trade goods and services directly with people in your community. No money, no middlemen, no surveillance.',
+  },
+}
 
 const CATEGORIES = [
   { name: 'Food & Garden', icon: '🌱', href: '/browse?category=food-garden' },

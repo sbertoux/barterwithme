@@ -4,11 +4,16 @@ import { Nav } from '@/components/Nav'
 
 export const metadata: Metadata = {
   title: { default: 'BarterWithMe', template: '%s | BarterWithMe' },
-  description: 'Trade goods and services directly with people in your community — no money, no middlemen.',
+  description: 'A privacy-first, community-owned barter platform. Trade goods and services directly with people in your community. No money, no middlemen, no surveillance.',
   metadataBase: new URL('https://barterwithme.org'),
   openGraph: {
     siteName: 'BarterWithMe',
     type: 'website',
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary',
+    site: '@barterwithme',
   },
 }
 
