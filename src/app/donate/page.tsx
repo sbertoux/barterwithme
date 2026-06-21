@@ -78,9 +78,20 @@ export default function DonatePage() {
           Even if this instance shuts down, the code stays public.
           Anyone can run their own BarterWithMe community.
         </p>
-        <Link href="/why" className="text-brand-300 text-sm underline hover:text-brand-200">
-          Read why we built this →
-        </Link>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <a
+            href="https://github.com/sbertoux/barterwithme"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-brand-300 text-sm underline hover:text-brand-200"
+          >
+            View the source code →
+          </a>
+          <span className="hidden sm:inline text-stone-600">·</span>
+          <Link href="/why" className="text-stone-400 text-sm underline hover:text-stone-300">
+            Read why we built this →
+          </Link>
+        </div>
       </div>
     </div>
   )

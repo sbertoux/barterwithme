@@ -86,7 +86,9 @@ export default function WhyPage() {
           BarterWithMe doesn't make money from you. We don't sell your data. We don't run ads. We don't have investors to answer to.
         </p>
         <p>
-          The platform is funded by voluntary donations from people who believe in what it is. The code is open source — anyone can read it, verify it, run their own instance. If this platform ever gets pressured or shut down, the community can pick it up and keep going.
+          The platform is funded by voluntary donations from people who believe in what it is.{' '}
+          <a href="https://github.com/sbertoux/barterwithme" target="_blank" rel="noopener noreferrer" className="underline text-stone-700 hover:text-brand-600">The code is open source</a>{' '}
+          — anyone can read it, verify it, run their own instance. If this platform ever gets pressured or shut down, the community can pick it up and keep going.
         </p>
         <p className="font-semibold text-stone-800">No single point of failure. No single throat to choke.</p>
         <p>That's intentional.</p>

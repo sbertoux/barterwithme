@@ -40,6 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <a href="/community-guidelines" className="hover:text-stone-600 hover:underline">Guidelines</a>
             <a href="/terms" className="hover:text-stone-600 hover:underline">Terms of Service</a>
             <a href="/donate" className="hover:text-stone-600 hover:underline">Support the project</a>
+            <a href="https://github.com/sbertoux/barterwithme" target="_blank" rel="noopener noreferrer" className="hover:text-stone-600 hover:underline">Open source on GitHub →</a>
           </nav>
           <p>Community-owned · Open source · No ads · No data sales</p>
         </footer>
