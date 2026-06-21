@@ -68,7 +68,7 @@ export function BrowseFilters({ initialQ, initialCategory, initialRegion, region
       </form>
 
       {/* Category pills */}
-      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:flex-wrap sm:overflow-x-visible sm:px-0">
         <button
           onClick={() => push({ category: null })}
           className={cn(
