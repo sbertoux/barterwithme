@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { zipToRegion, isValidUSZip } from '@/lib/region'
 
 type Step = 'welcome' | 'details' | 'verify-email'
@@ -30,7 +29,6 @@ const RULES = [
 ]
 
 export function SignupForm() {
-  const supabase = createClient()
   const [step, setStep] = useState<Step>('welcome')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -68,22 +66,22 @@ export function SignupForm() {
     setLoading(true)
     const region = zipToRegion(form.zip.trim())
 
-    const { error: signupError } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-        data: {
-          username: form.username,
-          region,
-          terms_accepted_at: new Date().toISOString(),
-        },
-      },
+    const res = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: form.email,
+        password: form.password,
+        username: form.username,
+        region,
+        termsAcceptedAt: new Date().toISOString(),
+      }),
     })
 
     setLoading(false)
-    if (signupError) {
-      setError(signupError.message)
+    if (!res.ok) {
+      const { error } = await res.json()
+      setError(error ?? 'Something went wrong.')
       return
     }
 

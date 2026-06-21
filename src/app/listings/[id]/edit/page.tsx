@@ -46,7 +46,6 @@ export default async function EditListingPage({ params }: Props) {
       </div>
 
       <EditListingForm
-        userId={user.id}
         listing={{
           id: listing.id,
           title: listing.title,

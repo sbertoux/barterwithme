@@ -51,11 +51,10 @@ interface ListingData {
 }
 
 interface Props {
-  userId: string
   listing: ListingData
 }
 
-export function EditListingForm({ userId, listing }: Props) {
+export function EditListingForm({ listing }: Props) {
   const supabase = createClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -114,13 +113,15 @@ export function EditListingForm({ userId, listing }: Props) {
   }
 
   async function uploadPhoto(file: File): Promise<string> {
-    const ext = file.name.split('.').pop() ?? 'jpg'
-    const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-    const { error } = await supabase.storage
-      .from('listing-photos')
-      .upload(path, file, { cacheControl: '3600' })
-    if (error) throw new Error(`Upload failed: ${error.message}`)
-    return supabase.storage.from('listing-photos').getPublicUrl(path).data.publicUrl
+    const body = new FormData()
+    body.append('file', file)
+    const res = await fetch('/api/upload', { method: 'POST', body })
+    if (!res.ok) {
+      const { error } = await res.json()
+      throw new Error(error ?? 'Photo upload failed.')
+    }
+    const { url } = await res.json()
+    return url
   }
 
   function storagePathFromUrl(url: string): string | null {

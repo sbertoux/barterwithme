@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { flagLimiter } from '@/lib/ratelimit'
 
 const VALID_REASONS = ['inappropriate_content', 'spam', 'misleading', 'other']
 
@@ -11,6 +12,9 @@ export async function POST(
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { success } = await flagLimiter.limit(user.id)
+  if (!success) return NextResponse.json({ error: 'Too many reports. Try again tomorrow.' }, { status: 429 })
 
   const { reason, details } = await request.json()
 

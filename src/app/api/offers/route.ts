@@ -2,11 +2,15 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { notifyOfferReceived } from '@/lib/email'
+import { offerLimiter } from '@/lib/ratelimit'
 
 export async function POST(request: Request) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { success } = await offerLimiter.limit(user.id)
+  if (!success) return NextResponse.json({ error: 'Too many offers. Try again later.' }, { status: 429 })
 
   const { listingId, offerDescription } = await request.json()
   if (!listingId || !offerDescription?.trim()) {
