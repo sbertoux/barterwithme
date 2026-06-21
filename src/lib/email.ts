@@ -1,6 +1,15 @@
 const FROM = 'BarterWithMe <noreply@barterwithme.org>'
 const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://barterwithme.org'
 
+function esc(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 async function send(to: string, subject: string, html: string) {
   if (!process.env.RESEND_API_KEY) return // not configured — skip silently
   await fetch('https://api.resend.com/emails', {
@@ -21,9 +30,9 @@ export function notifyOfferReceived(
 ) {
   return send(
     ownerEmail,
-    `New offer on "${listingTitle}"`,
-    `<p><strong>@${fromUsername}</strong> made an offer on your listing <em>${listingTitle}</em>:</p>
-     <blockquote style="border-left:3px solid #e3731c;padding-left:12px;margin:12px 0">${offerDescription}</blockquote>
+    `New offer on "${esc(listingTitle)}"`,
+    `<p><strong>@${esc(fromUsername)}</strong> made an offer on your listing <em>${esc(listingTitle)}</em>:</p>
+     <blockquote style="border-left:3px solid #e3731c;padding-left:12px;margin:12px 0">${esc(offerDescription)}</blockquote>
      <p><a href="${BASE}/offers/${offerId}">Review offer →</a></p>`
   )
 }
@@ -34,8 +43,8 @@ export function notifyOfferAccepted(
 ) {
   return send(
     traderEmail,
-    `Your offer on "${listingTitle}" was accepted!`,
-    `<p>Great news — your offer on <strong>${listingTitle}</strong> was accepted.</p>
+    `Your offer on "${esc(listingTitle)}" was accepted!`,
+    `<p>Great news — your offer on <strong>${esc(listingTitle)}</strong> was accepted.</p>
      <p>Message the other person to arrange your trade.</p>
      <p><a href="${BASE}/offers/${offerId}">Open thread →</a></p>`
   )
@@ -47,8 +56,8 @@ export function notifyNewMessage(
 ) {
   return send(
     toEmail,
-    `New message from @${fromUsername}`,
-    `<p><strong>@${fromUsername}</strong> sent you a message about <em>${listingTitle}</em>.</p>
+    `New message from @${esc(fromUsername)}`,
+    `<p><strong>@${esc(fromUsername)}</strong> sent you a message about <em>${esc(listingTitle)}</em>.</p>
      <p><a href="${BASE}/offers/${offerId}">Reply →</a></p>`
   )
 }
@@ -67,8 +76,8 @@ export function notifyTradeConfirmed(
   }
   return send(
     toEmail,
-    `@${fromUsername} confirmed their side of the trade`,
-    `<p><strong>@${fromUsername}</strong> confirmed their side of the trade.</p>
+    `@${esc(fromUsername)} confirmed their side of the trade`,
+    `<p><strong>@${esc(fromUsername)}</strong> confirmed their side of the trade.</p>
      <p>Once you confirm too, the trade will be officially complete.</p>
      <p><a href="${BASE}/offers/${offerId}">Confirm your side →</a></p>`
   )
