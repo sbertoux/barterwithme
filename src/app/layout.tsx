@@ -15,6 +15,9 @@ export const metadata: Metadata = {
     card: 'summary',
     site: '@barterwithme',
   },
+  verification: {
+    google: 'E1_yC-ikAHz91wvKRp8gMVQ2IMoVYmG3yUlJ_mFODdY',
+  },
 }
 
 export const viewport: Viewport = {
